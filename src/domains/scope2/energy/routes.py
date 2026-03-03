@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....auth import CurrentUser
+from ....authentication import CurrentUser
 from ....database import retrieve_database
 from . import service
 from .schemas import (
@@ -21,18 +21,29 @@ router = APIRouter(prefix="/inventories/{inventory_id}/scope2/energy", tags=["sc
 DatabaseSession = Annotated[AsyncSession, Depends(retrieve_database)]
 
 
-@router.get("/consumer-units", response_model=list[UnidadeConsumidoraResponse])
+@router.get(
+    "/consumer-units",
+    response_model=list[UnidadeConsumidoraResponse],
+    summary="List consumer units",
+    description="Returns all electricity consumer units for the organization.",
+)
 async def list_consumer_units(
     inventory_id: UUID,
     current_user: CurrentUser,
     session: DatabaseSession,
-    organizacao_id: UUID | None = Query(default=None),
+    organizacao_id: Annotated[UUID | None, Query()] = None,
 ):
     org_id = organizacao_id or current_user.organization.id
     return await service.list_consumer_units(org_id, session)
 
 
-@router.post("/consumer-units", response_model=UnidadeConsumidoraResponse, status_code=201)
+@router.post(
+    "/consumer-units",
+    response_model=UnidadeConsumidoraResponse,
+    status_code=201,
+    summary="Create consumer unit",
+    description="Creates a new electricity consumer unit.",
+)
 async def create_consumer_unit(
     inventory_id: UUID,
     data: UnidadeConsumidoraCreate,
@@ -42,17 +53,28 @@ async def create_consumer_unit(
     return await service.create_consumer_unit(data, session)
 
 
-@router.get("", response_model=list[ConsumoEnergiaResponse])
+@router.get(
+    "",
+    response_model=list[ConsumoEnergiaResponse],
+    summary="List energy consumption records",
+    description="Returns all energy consumption records for the inventory.",
+)
 async def list_consumption_records(
     inventory_id: UUID,
     current_user: CurrentUser,
     session: DatabaseSession,
-    organizacao_id: UUID | None = Query(default=None),
+    organizacao_id: Annotated[UUID | None, Query()] = None,
 ):
     return await service.list_consumption_records(inventory_id, organizacao_id, session)
 
 
-@router.post("", response_model=ConsumoEnergiaResponse, status_code=201)
+@router.post(
+    "",
+    response_model=ConsumoEnergiaResponse,
+    status_code=201,
+    summary="Create energy consumption record",
+    description="Creates a new energy consumption record with calculated emissions.",
+)
 async def create_consumption_record(
     inventory_id: UUID,
     data: ConsumoEnergiaCreate,
@@ -62,7 +84,12 @@ async def create_consumption_record(
     return await service.create_consumption_record(data, session)
 
 
-@router.get("/{record_id}", response_model=ConsumoEnergiaResponse)
+@router.get(
+    "/{record_id}",
+    response_model=ConsumoEnergiaResponse,
+    summary="Get energy consumption record",
+    description="Returns a single energy consumption record by ID.",
+)
 async def get_consumption_record(
     inventory_id: UUID,
     record_id: UUID,
@@ -72,7 +99,12 @@ async def get_consumption_record(
     return await service.get_consumption_record(record_id, session)
 
 
-@router.delete("/{record_id}", status_code=204)
+@router.delete(
+    "/{record_id}",
+    status_code=204,
+    summary="Delete energy consumption record",
+    description="Deletes an energy consumption record by ID.",
+)
 async def delete_consumption_record(
     inventory_id: UUID,
     record_id: UUID,
@@ -82,7 +114,13 @@ async def delete_consumption_record(
     await service.delete_consumption_record(record_id, session)
 
 
-@router.post("/{record_id}/evidence", response_model=EvidenciaConsumoEnergiaResponse, status_code=201)
+@router.post(
+    "/{record_id}/evidence",
+    response_model=EvidenciaConsumoEnergiaResponse,
+    status_code=201,
+    summary="Add evidence to consumption record",
+    description="Uploads an evidence file linked to an energy consumption record.",
+)
 async def add_evidence(
     inventory_id: UUID,
     record_id: UUID,

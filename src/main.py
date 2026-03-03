@@ -96,5 +96,8 @@ if __name__ == "__main__":
     if settings.remote_debug:
         debugpy.listen(("0.0.0.0", 5680))
         _LOGGER.info("Remote debugging enabled. Listening on port 5680")
+        if settings.wait_debugger:
+            _LOGGER.info("Waiting for debugger to attach...")
+            debugpy.wait_for_client()
 
     uvicorn.run(app, host=settings.host, port=settings.port)

@@ -1,6 +1,5 @@
 #!/bin/sh
 
-# set -eux
 set -eu
 
 echo "Executing script \"$0\"."
@@ -25,7 +24,6 @@ if [ -z "${MNZ_MI_WORK_DIRECTORY:-}" ]; then
     exit 1
 fi
 
-# Check if we should skip build dependencies (for runtime stage)
 SKIP_BUILD_DEPS="${1:-false}"
 
 if [ "$SKIP_BUILD_DEPS" != "true" ]; then

@@ -1,5 +1,4 @@
 # type: ignore[call-arg]
-
 import os
 from typing import Annotated, Any
 
@@ -94,6 +93,8 @@ class Settings(BaseSettings):
     database_url: str
 
     remote_debug: bool = False
+
+    wait_debugger: bool = False
 
     keycloak: KeycloakSettings = Field(default_factory=KeycloakSettings)
 

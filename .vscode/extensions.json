@@ -1,0 +1,13 @@
+{
+    "recommendations": [
+        "ms-python.autopep8",
+        "github.copilot-chat",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "sonarsource.sonarlint-vscode",
+        "naumovs.color-highlight",
+        "ms-python.isort",
+        "charliermarsh.ruff"
+    ]
+}

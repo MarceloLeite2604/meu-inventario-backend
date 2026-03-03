@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....domains.reference_data.models import AeroportoCoordenada, FatorEmissaoAerea, FatorTransporteOnibus, TransporteMetro, TransporteTrem
+from ....util.logger import retrieve_logger
 from .calculations import (
     AirEmissions,
     GroundEmissions,
@@ -16,10 +17,13 @@ from .calculations import (
 from .models import Deslocamento, EmissaoViagemNegocio
 from .schemas import DeslocamentoCreate, EmissaoViagemNegocioCreate
 
+_LOGGER = retrieve_logger(__name__)
+
 
 async def list_records(
     inventario_id: UUID | None, organizacao_id: UUID | None, session: AsyncSession
 ) -> list[EmissaoViagemNegocio]:
+    _LOGGER.info("Listing business travel records for inventory %s", inventario_id)
     query = select(EmissaoViagemNegocio)
     if organizacao_id:
         query = query.where(EmissaoViagemNegocio.organizacao_id == organizacao_id)
@@ -28,10 +32,12 @@ async def list_records(
 
 
 async def get_record(record_id: UUID, session: AsyncSession) -> EmissaoViagemNegocio:
+    _LOGGER.info("Retrieving business travel record %s", record_id)
     result = await session.execute(
         select(EmissaoViagemNegocio).where(EmissaoViagemNegocio.id == record_id))
     record = result.scalar_one_or_none()
     if not record:
+        _LOGGER.warning("Business travel record %s not found", record_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
     return record
 
@@ -41,6 +47,7 @@ async def _get_airport(code: str, session: AsyncSession) -> AeroportoCoordenada:
         select(AeroportoCoordenada).where(AeroportoCoordenada.sigla == code.upper()))
     airport = result.scalar_one_or_none()
     if not airport:
+        _LOGGER.warning("Airport not found: %s", code)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Airport not found: {code}",
@@ -149,7 +156,7 @@ async def _calculate_metro_emissions(
 
     passengers = data.quantidade_passageiros or 1
     round_trip = data.round_trip or False
-    co2_per_pkm = factor.g_co2_passageiro_km / 1_000_000  # g → tonnes
+    co2_per_pkm = factor.g_co2_passageiro_km / 1_000_000
 
     emissions: GroundEmissions = calculate_ground(
         distance_km=data.distance,
@@ -181,7 +188,7 @@ async def _calculate_train_emissions(
 
     passengers = data.quantidade_passageiros or 1
     round_trip = data.round_trip or False
-    co2_per_pkm = factor.g_co2_passageiro_km / 1_000_000  # g → tonnes
+    co2_per_pkm = factor.g_co2_passageiro_km / 1_000_000
 
     emissions: GroundEmissions = calculate_ground(
         distance_km=data.distance,
@@ -202,6 +209,7 @@ async def _calculate_train_emissions(
 async def create_record(
     data: EmissaoViagemNegocioCreate, session: AsyncSession
 ) -> EmissaoViagemNegocio:
+    _LOGGER.info("Creating business travel record with transport type %s", data.tipo_transporte)
     transport = data.tipo_transporte.lower()
     calculated: dict = {}
 
@@ -227,6 +235,7 @@ async def create_record(
 
 
 async def delete_record(record_id: UUID, session: AsyncSession) -> None:
+    _LOGGER.info("Deleting business travel record %s", record_id)
     record = await get_record(record_id, session)
     await session.delete(record)
 
@@ -234,6 +243,7 @@ async def delete_record(record_id: UUID, session: AsyncSession) -> None:
 async def list_displacements(
     organizacao_id: UUID | None, session: AsyncSession
 ) -> list[Deslocamento]:
+    _LOGGER.info("Listing displacements for organization %s", organizacao_id)
     query = select(Deslocamento)
     if organizacao_id:
         query = query.where(Deslocamento.organizacao_id == organizacao_id)
@@ -244,6 +254,7 @@ async def list_displacements(
 async def create_displacement(
     data: DeslocamentoCreate, session: AsyncSession
 ) -> Deslocamento:
+    _LOGGER.info("Creating displacement for organization %s", data.organizacao_id)
     record = Deslocamento(**data.model_dump())
     session.add(record)
     await session.flush()

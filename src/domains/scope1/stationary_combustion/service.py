@@ -5,9 +5,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....domains.reference_data.models import FatorEstacionaria, Gwp
+from ....util.logger import retrieve_logger
 from .calculations import calculate
 from .models import EmissaoEstacionaria
 from .schemas import EmissaoEstacionariaCreate
+
+_LOGGER = retrieve_logger(__name__)
 
 
 async def _get_gwp(gas: str, session: AsyncSession) -> float:
@@ -17,6 +20,7 @@ async def _get_gwp(gas: str, session: AsyncSession) -> float:
 
 
 async def list_records(organizacao_id: UUID | None, session: AsyncSession) -> list[EmissaoEstacionaria]:
+    _LOGGER.info("Listing stationary combustion records for organization %s", organizacao_id)
     query = select(EmissaoEstacionaria)
     if organizacao_id:
         query = query.where(EmissaoEstacionaria.organizacao_id == organizacao_id)
@@ -25,10 +29,12 @@ async def list_records(organizacao_id: UUID | None, session: AsyncSession) -> li
 
 
 async def get_record(record_id: UUID, session: AsyncSession) -> EmissaoEstacionaria:
+    _LOGGER.info("Retrieving stationary combustion record %s", record_id)
     result = await session.execute(
         select(EmissaoEstacionaria).where(EmissaoEstacionaria.id == record_id))
     record = result.scalar_one_or_none()
     if not record:
+        _LOGGER.warning("Stationary combustion record %s not found", record_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
     return record
 
@@ -36,6 +42,7 @@ async def get_record(record_id: UUID, session: AsyncSession) -> EmissaoEstaciona
 async def create_record(
     data: EmissaoEstacionariaCreate, session: AsyncSession
 ) -> EmissaoEstacionaria:
+    _LOGGER.info("Creating stationary combustion record for organization %s", data.organizacao_id)
     gwp_ch4 = await _get_gwp("CH4", session)
     gwp_n2o = await _get_gwp("N2O", session)
 
@@ -77,5 +84,6 @@ async def create_record(
 
 
 async def delete_record(record_id: UUID, session: AsyncSession) -> None:
+    _LOGGER.info("Deleting stationary combustion record %s", record_id)
     record = await get_record(record_id, session)
     await session.delete(record)

@@ -1,0 +1,21 @@
+name: mnz
+services:
+  meu-inventario:
+    user: "${HOST_UID:-0}:${HOST_GID:-0}"
+    build:
+      context: ../.
+      dockerfile: ./docker/Dockerfile
+      args:
+        - MNZ_MI_WORK_DIRECTORY=${MNZ_MI_WORK_DIRECTORY:-undefined}
+    env_file:
+      - path: ../.env
+        required: false
+      - path: ../.env.${ENVIRONMENT}
+        required: false
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}
+    image: mnz-meu-inventario:${IMAGE_TAG}
+    ports:
+      - "${MNZ_MI_PORT:-8000}:${MNZ_MI_PORT:-8000}"
+      - "5680:5680"
+    restart: unless-stopped

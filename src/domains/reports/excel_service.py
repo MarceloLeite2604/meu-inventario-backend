@@ -6,6 +6,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...util.logger import retrieve_logger
 from ..inventories.models import Inventario
 from ..organizations.models import Organizacao
 from ..scope1.effluents.models import EmissaoEfluente
@@ -20,6 +21,8 @@ _HEADER_FONT = Font(color="FFFFFF", bold=True)
 _SCOPE_FILL = PatternFill(start_color="2E75B6", end_color="2E75B6", fill_type="solid")
 _SCOPE_FONT = Font(color="FFFFFF", bold=True)
 _TOTAL_FONT = Font(bold=True)
+
+_LOGGER = retrieve_logger(__name__)
 
 
 def _header(ws, row: int, cols: list[str]) -> None:
@@ -38,6 +41,7 @@ def _scope_row(ws, row: int, label: str, n_cols: int) -> None:
 
 
 async def generate_excel(inventory_id: UUID, session: AsyncSession) -> bytes:
+    _LOGGER.info("Generating Excel report for inventory %s", inventory_id)
     inv_result = await session.execute(
         select(Inventario).where(Inventario.id == inventory_id))
     inv = inv_result.scalar_one_or_none()
@@ -55,8 +59,8 @@ async def generate_excel(inventory_id: UUID, session: AsyncSession) -> bytes:
 
     wb = Workbook()
 
-    # ── Summary sheet ─────────────────────────────────────────────────────
     ws_summary = wb.active
+    assert ws_summary is not None
     ws_summary.title = "Resumo"
 
     ws_summary["A1"] = "Inventario de Emissoes GHG"
@@ -107,11 +111,9 @@ async def generate_excel(inventory_id: UUID, session: AsyncSession) -> bytes:
     ws_summary.column_dimensions["B"].width = 35
     ws_summary.column_dimensions["C"].width = 20
 
-    # ── Scope 1 detail sheet ───────────────────────────────────────────────
     ws1 = wb.create_sheet("Escopo 1")
 
     if org_id:
-        # Mobile combustion
         result = await session.execute(
             select(EmissaoCombustaoMovel).where(EmissaoCombustaoMovel.organizacao_id == org_id))
         mobile_records = result.scalars().all()
@@ -122,11 +124,10 @@ async def generate_excel(inventory_id: UUID, session: AsyncSession) -> bytes:
             ws1.cell(row_num, 1, r.ano)
             ws1.cell(row_num, 2, r.mes)
             ws1.cell(row_num, 3, r.combustivel)
-            ws1.cell(row_num, 4, r.quantidade_combustivel)
-            ws1.cell(row_num, 5, r.unidade_combustivel)
-            ws1.cell(row_num, 6, r.emissoes_tco2e_total)
+            ws1.cell(row_num, 4, r.quantidade)
+            ws1.cell(row_num, 5, r.unidade)
+            ws1.cell(row_num, 6, r.emissoes_total_tco2e)
 
-    # ── Scope 2 detail sheet ───────────────────────────────────────────────
     ws2 = wb.create_sheet("Escopo 2")
 
     if org_id:
@@ -143,7 +144,6 @@ async def generate_excel(inventory_id: UUID, session: AsyncSession) -> bytes:
             ws2.cell(row_num, 4, r.emissoes_energia_tco2e)
             ws2.cell(row_num, 5, r.descricao)
 
-    # ── Scope 3 detail sheet ───────────────────────────────────────────────
     ws3 = wb.create_sheet("Escopo 3")
 
     if org_id:
@@ -162,6 +162,7 @@ async def generate_excel(inventory_id: UUID, session: AsyncSession) -> bytes:
             ws3.cell(row_num, 6, r.distance)
             ws3.cell(row_num, 7, r.emissoes_tco2e_total)
 
+    _LOGGER.info("Excel report generated for inventory %s", inventory_id)
     buf = BytesIO()
     wb.save(buf)
     return buf.getvalue()

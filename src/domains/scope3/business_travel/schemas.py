@@ -10,12 +10,10 @@ class EmissaoViagemNegocioCreate(BaseModel):
     ano: int
     mes: int
     metodo_calculo: str | None = None
-    # Air travel
     origin: str | None = None
     destination: str | None = None
     distance: float | None = None
     round_trip: bool | None = None
-    # Ground transport
     tipo_veiculo: str | None = None
     ano_veiculo: int | None = None
     tipo_frota_de_veiculos: str | None = None

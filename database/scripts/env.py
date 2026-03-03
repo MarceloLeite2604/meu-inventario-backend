@@ -5,10 +5,10 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
-config = context.config
+alembic_configuration = context.config
 
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+if alembic_configuration.config_file_name is not None:
+    fileConfig(alembic_configuration.config_file_name)
 
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -17,7 +17,14 @@ from src.models import Base  # noqa: E402
 
 target_metadata = Base.metadata
 
-_DATABASE_URL = os.environ.get("MNZ_MI_DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+_DATABASE_URL: str = (
+    os.environ.get("MNZ_MI_DATABASE_URL")
+    or alembic_configuration.get_main_option("sqlalchemy.url")
+    or ""
+)
+
+if not _DATABASE_URL:
+    raise ValueError("DATABASE_URL must be set via MNZ_MI_DATABASE_URL or sqlalchemy.url in alembic.ini")
 
 
 def run_migrations_offline() -> None:
@@ -32,7 +39,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection):
+def do_run_migrations(connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():

@@ -5,9 +5,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....domains.reference_data.models import FatorTratamentoEfluente, Gwp
+from ....util.logger import retrieve_logger
 from .calculations import calculate
 from .models import EmissaoEfluente
 from .schemas import EmissaoEfluenteCreate
+
+_LOGGER = retrieve_logger(__name__)
 
 
 async def _get_gwp(gas: str, session: AsyncSession) -> float:
@@ -19,6 +22,7 @@ async def _get_gwp(gas: str, session: AsyncSession) -> float:
 async def list_records(
     inventario_id: UUID | None, organizacao_id: UUID | None, session: AsyncSession
 ) -> list[EmissaoEfluente]:
+    _LOGGER.info("Listing effluent emission records for inventory %s", inventario_id)
     query = select(EmissaoEfluente)
     if inventario_id:
         query = query.where(EmissaoEfluente.inventario_id == inventario_id)
@@ -29,15 +33,18 @@ async def list_records(
 
 
 async def get_record(record_id: UUID, session: AsyncSession) -> EmissaoEfluente:
+    _LOGGER.info("Retrieving effluent emission record %s", record_id)
     result = await session.execute(
         select(EmissaoEfluente).where(EmissaoEfluente.id == record_id))
     record = result.scalar_one_or_none()
     if not record:
+        _LOGGER.warning("Effluent emission record %s not found", record_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
     return record
 
 
 async def create_record(data: EmissaoEfluenteCreate, session: AsyncSession) -> EmissaoEfluente:
+    _LOGGER.info("Creating effluent emission record for organization %s", data.organizacao_id)
     gwp_ch4 = await _get_gwp("CH4", session)
     gwp_n2o = await _get_gwp("N2O", session)
 
@@ -51,6 +58,14 @@ async def create_record(data: EmissaoEfluenteCreate, session: AsyncSession) -> E
             fator_n2o = factor.fator_n2o_default
 
     calculated = None
+    if not all(v is not None for v in [
+        data.volume_efluente, data.carga_organica_entrada, data.carga_organica_lodo,
+        data.mcf_tratamento, data.nitrogenio_efluente
+    ]):
+        _LOGGER.warning(
+            "Insufficient data to calculate effluent emissions for organization %s",
+            data.organizacao_id,
+        )
     if all(v is not None for v in [
         data.volume_efluente, data.carga_organica_entrada, data.carga_organica_lodo,
         data.mcf_tratamento, data.nitrogenio_efluente
@@ -86,5 +101,6 @@ async def create_record(data: EmissaoEfluenteCreate, session: AsyncSession) -> E
 
 
 async def delete_record(record_id: UUID, session: AsyncSession) -> None:
+    _LOGGER.info("Deleting effluent emission record %s", record_id)
     record = await get_record(record_id, session)
     await session.delete(record)

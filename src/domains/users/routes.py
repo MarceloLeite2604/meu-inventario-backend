@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...auth import CurrentUser
+from ...authentication import CurrentUser
 from ...database import retrieve_database
 from . import service
 from .schemas import ProfileResponse, ProfileUpdate, UserPermissaoCreate, UserPermissaoResponse
@@ -13,12 +13,22 @@ router = APIRouter(prefix="/users", tags=["users"])
 DatabaseSession = Annotated[AsyncSession, Depends(retrieve_database)]
 
 
-@router.get("/{user_id}", response_model=ProfileResponse)
+@router.get(
+    "/{user_id}",
+    response_model=ProfileResponse,
+    summary="Get user profile",
+    description="Returns the profile for the specified user.",
+)
 async def get_profile(user_id: str, current_user: CurrentUser, session: DatabaseSession):
     return await service.get_profile(user_id, session)
 
 
-@router.put("/{user_id}", response_model=ProfileResponse)
+@router.put(
+    "/{user_id}",
+    response_model=ProfileResponse,
+    summary="Update user profile",
+    description="Creates or updates the profile for the specified user.",
+)
 async def update_profile(
     user_id: str,
     data: ProfileUpdate,
@@ -28,12 +38,23 @@ async def update_profile(
     return await service.upsert_profile(user_id, data, session)
 
 
-@router.get("/{user_id}/permissions", response_model=list[UserPermissaoResponse])
+@router.get(
+    "/{user_id}/permissions",
+    response_model=list[UserPermissaoResponse],
+    summary="List user permissions",
+    description="Returns all permissions granted to the specified user.",
+)
 async def list_permissions(user_id: str, current_user: CurrentUser, session: DatabaseSession):
     return await service.list_user_permissions(user_id, session)
 
 
-@router.post("/{user_id}/permissions", response_model=UserPermissaoResponse, status_code=201)
+@router.post(
+    "/{user_id}/permissions",
+    response_model=UserPermissaoResponse,
+    status_code=201,
+    summary="Grant permission",
+    description="Grants a new permission to the specified user.",
+)
 async def grant_permission(
     user_id: str,
     data: UserPermissaoCreate,

@@ -6,6 +6,7 @@ from fpdf import FPDF
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...util.logger import retrieve_logger
 from ..inventories.models import Inventario
 from ..organizations.models import Organizacao
 from ..scope1.effluents.models import EmissaoEfluente
@@ -14,6 +15,8 @@ from ..scope1.mobile_combustion.models import EmissaoCombustaoMovel
 from ..scope1.stationary_combustion.models import EmissaoEstacionaria
 from ..scope2.energy.models import ConsumoEnergia
 from ..scope3.business_travel.models import EmissaoViagemNegocio
+
+_LOGGER = retrieve_logger(__name__)
 
 
 @dataclass
@@ -34,7 +37,6 @@ async def _fetch_totals(inventory_id: UUID, session: AsyncSession) -> InventoryT
                 total += val
         return total
 
-    # We query by organizacao_id from the inventory
     inv_result = await session.execute(
         select(Inventario).where(Inventario.id == inventory_id))
     inv = inv_result.scalar_one_or_none()
@@ -71,6 +73,7 @@ async def _fetch_totals(inventory_id: UUID, session: AsyncSession) -> InventoryT
 
 
 async def generate_pdf(inventory_id: UUID, session: AsyncSession) -> bytes:
+    _LOGGER.info("Generating PDF report for inventory %s", inventory_id)
     inv_result = await session.execute(
         select(Inventario).where(Inventario.id == inventory_id))
     inv = inv_result.scalar_one_or_none()
@@ -123,6 +126,7 @@ async def generate_pdf(inventory_id: UUID, session: AsyncSession) -> bytes:
     pdf.set_font("Helvetica", "I", 9)
     pdf.cell(0, 6, "Gerado automaticamente pelo sistema Meu Inventario - Mercado Net Zero", ln=True)
 
+    _LOGGER.info("PDF report generated for inventory %s", inventory_id)
     buf = BytesIO()
     buf.write(pdf.output())
     return buf.getvalue()

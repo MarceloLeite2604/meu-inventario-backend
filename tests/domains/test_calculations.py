@@ -13,11 +13,8 @@ from src.domains.scope3.business_travel.calculations import (
 )
 
 
-# ── Fugitive ────────────────────────────────────────────────────────────────
-
 class TestFugitiveCalculations:
     def test_basic(self):
-        # 1 kg of R-134a (GWP=1300) → 1.3 tCO2e
         result = fugitive_calculate(1.0, 1300.0)
         assert result == pytest.approx(1.3, rel=1e-6)
 
@@ -28,19 +25,14 @@ class TestFugitiveCalculations:
         assert fugitive_calculate(100.0, 0.0) == 0.0
 
 
-# ── Energy ───────────────────────────────────────────────────────────────────
-
 class TestEnergyCalculations:
     def test_basic(self):
-        # 10 MWh × 0.09 tCO2e/MWh = 0.9 tCO2e
         result = energy_calculate(10.0, 0.09)
         assert result == pytest.approx(0.9, rel=1e-6)
 
     def test_zero_consumption(self):
         assert energy_calculate(0.0, 0.09) == 0.0
 
-
-# ── Effluents ────────────────────────────────────────────────────────────────
 
 class TestEffluentCalculations:
     def test_basic_domestic(self):
@@ -63,14 +55,11 @@ class TestEffluentCalculations:
         assert result.emissoes_tco2e >= 0
 
 
-# ── Business Travel — Haversine ──────────────────────────────────────────────
-
 class TestHaversine:
     def test_same_point(self):
         assert haversine_km(0.0, 0.0, 0.0, 0.0) == pytest.approx(0.0, abs=1e-6)
 
     def test_known_distance(self):
-        # GRU (Sao Paulo) to GIG (Rio de Janeiro) ≈ 360 km
         gruso = (-23.4356, -46.4731)
         gig = (-22.8100, -43.2506)
         dist = haversine_km(*gruso, *gig)

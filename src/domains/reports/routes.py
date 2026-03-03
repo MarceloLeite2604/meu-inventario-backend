@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...auth import CurrentUser
+from ...authentication import CurrentUser
 from ...database import retrieve_database
 from . import excel_service, pdf_service
 
@@ -14,7 +14,11 @@ router = APIRouter(prefix="/inventories/{inventory_id}/reports", tags=["reports"
 DatabaseSession = Annotated[AsyncSession, Depends(retrieve_database)]
 
 
-@router.get("/pdf")
+@router.get(
+    "/pdf",
+    summary="Download PDF report",
+    description="Generates and downloads the GHG inventory report as a PDF file.",
+)
 async def download_pdf_report(
     inventory_id: UUID,
     current_user: CurrentUser,
@@ -30,7 +34,11 @@ async def download_pdf_report(
     )
 
 
-@router.get("/excel")
+@router.get(
+    "/excel",
+    summary="Download Excel report",
+    description="Generates and downloads the GHG inventory report as an Excel file.",
+)
 async def download_excel_report(
     inventory_id: UUID,
     current_user: CurrentUser,

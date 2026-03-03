@@ -5,9 +5,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....domains.reference_data.models import FatorTipoCombustivel, Gwp
+from ....util.logger import retrieve_logger
 from .calculations import EmissionFactors, calculate
 from .models import EmissaoCombustaoMovel
 from .schemas import EmissaoCombustaoMovelCreate
+
+_LOGGER = retrieve_logger(__name__)
 
 
 async def _get_factors(
@@ -62,6 +65,7 @@ async def _get_gwp(gas: str, session: AsyncSession) -> float:
 async def list_records(
     inventario_id: UUID | None, organizacao_id: UUID | None, session: AsyncSession
 ) -> list[EmissaoCombustaoMovel]:
+    _LOGGER.info("Listing mobile combustion records for inventory %s", inventario_id)
     query = select(EmissaoCombustaoMovel)
     if inventario_id:
         query = query.where(EmissaoCombustaoMovel.inventario_id == inventario_id)
@@ -72,10 +76,12 @@ async def list_records(
 
 
 async def get_record(record_id: UUID, session: AsyncSession) -> EmissaoCombustaoMovel:
+    _LOGGER.info("Retrieving mobile combustion record %s", record_id)
     result = await session.execute(
         select(EmissaoCombustaoMovel).where(EmissaoCombustaoMovel.id == record_id))
     record = result.scalar_one_or_none()
     if not record:
+        _LOGGER.warning("Mobile combustion record %s not found", record_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
     return record
 
@@ -83,6 +89,7 @@ async def get_record(record_id: UUID, session: AsyncSession) -> EmissaoCombustao
 async def create_record(
     data: EmissaoCombustaoMovelCreate, session: AsyncSession
 ) -> EmissaoCombustaoMovel:
+    _LOGGER.info("Creating mobile combustion record for organization %s", data.organizacao_id)
     gwp_ch4 = await _get_gwp("CH4", session)
     gwp_n2o = await _get_gwp("N2O", session)
 
@@ -114,5 +121,6 @@ async def create_record(
 
 
 async def delete_record(record_id: UUID, session: AsyncSession) -> None:
+    _LOGGER.info("Deleting mobile combustion record %s", record_id)
     record = await get_record(record_id, session)
     await session.delete(record)
