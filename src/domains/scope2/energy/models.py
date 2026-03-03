@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
@@ -19,7 +19,7 @@ class UnidadeConsumidora(Base):
     distribuidora: Mapped[str | None] = mapped_column(String(255))
     ativa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     consumos: Mapped[list["ConsumoEnergia"]] = relationship(
         back_populates="unidade_consumidora", cascade="all, delete-orphan")
@@ -39,7 +39,7 @@ class ConsumoEnergia(Base):
     emissoes_energia_tco2e: Mapped[float | None] = mapped_column(Float)
     descricao: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     unidade_consumidora: Mapped["UnidadeConsumidora | None"] = relationship(
         back_populates="consumos")
@@ -61,6 +61,6 @@ class EvidenciaConsumoEnergia(Base):
     observacoes: Mapped[str | None] = mapped_column(Text)
     uploaded_by: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     consumo_energia: Mapped["ConsumoEnergia"] = relationship(back_populates="evidencias")

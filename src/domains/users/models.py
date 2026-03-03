@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, Integer, String
@@ -46,7 +46,7 @@ class UserPermissao(Base):
     tipo: Mapped[str] = mapped_column(String(50), nullable=False)
     referencia: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
     granted_by: Mapped[str | None] = mapped_column(String(255))
 
 
@@ -70,7 +70,7 @@ class UserTrialStatus(Base):
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     extended_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     granted_by: Mapped[str | None] = mapped_column(String(255))

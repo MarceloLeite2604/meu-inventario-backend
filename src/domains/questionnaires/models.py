@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
@@ -21,7 +21,7 @@ class QuestionarioSalvo(Base):
     total_emissoes: Mapped[float | None] = mapped_column(Float)
     created_by: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     respondentes: Mapped[list["QuestionarioRespondente"]] = relationship(
         back_populates="questionario", cascade="all, delete-orphan")
@@ -38,7 +38,7 @@ class QuestionarioRespondente(Base):
     nome: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     questionario: Mapped["QuestionarioSalvo"] = relationship(back_populates="respondentes")
     deslocamentos: Mapped[list["QuestionarioDeslocamento"]] = relationship(
@@ -66,7 +66,7 @@ class QuestionarioDeslocamento(Base):
     biocombustivel: Mapped[str | None] = mapped_column(String(100))
     emissoes_tco2e_total: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     questionario: Mapped["QuestionarioSalvo"] = relationship(back_populates="deslocamentos")
     respondente: Mapped["QuestionarioRespondente | None"] = relationship(
@@ -79,4 +79,4 @@ class RateLimit(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     key: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))

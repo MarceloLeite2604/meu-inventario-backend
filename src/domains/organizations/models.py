@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
@@ -35,9 +35,9 @@ class Organizacao(Base):
     modulo_inventario_habilitado: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     modulo_deslocamentos_habilitado: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     usuarios: Mapped[list["OrganizacaoUsuario"]] = relationship(
         back_populates="organizacao", cascade="all, delete-orphan")
@@ -52,7 +52,7 @@ class OrganizacaoUsuario(Base):
     user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     papel: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
     granted_by: Mapped[str | None] = mapped_column(String(255))
 
     organizacao: Mapped["Organizacao"] = relationship(back_populates="usuarios")
@@ -68,7 +68,7 @@ class OrganizacaoUsuarioModulo(Base):
         ForeignKey("organizacao_usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
     modulo: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
     granted_by: Mapped[str | None] = mapped_column(String(255))
 
     organizacao_usuario: Mapped["OrganizacaoUsuario"] = relationship(back_populates="modulos")

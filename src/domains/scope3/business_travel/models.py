@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
@@ -50,7 +50,7 @@ class EmissaoViagemNegocio(Base):
     fator_n2o: Mapped[float | None] = mapped_column(Float)
     descricao: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
 
 class Deslocamento(Base):
@@ -72,4 +72,4 @@ class Deslocamento(Base):
     biocombustivel: Mapped[str | None] = mapped_column(String(100))
     emissoes_tco2e_total: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))

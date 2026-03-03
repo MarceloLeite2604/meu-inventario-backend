@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
@@ -18,9 +18,9 @@ class CommutingEmpresa(Base):
     estado: Mapped[str | None] = mapped_column(String(50))
     ativa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     created_by: Mapped[str | None] = mapped_column(String(255))
 
     colaboradores: Mapped[list["CommutingColaborador"]] = relationship(
@@ -46,9 +46,9 @@ class CommutingColaborador(Base):
     streak_semanas: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     ativo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     empresa: Mapped["CommutingEmpresa"] = relationship(back_populates="colaboradores")
     registros: Mapped[list["CommutingRegistro"]] = relationship(
@@ -73,7 +73,7 @@ class CommutingTransporteHabitual(Base):
     dias_por_semana: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     principal: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     colaborador: Mapped["CommutingColaborador"] = relationship(
         back_populates="transportes_habituais")
@@ -98,7 +98,7 @@ class CommutingRegistro(Base):
     emissoes_tco2e: Mapped[float | None] = mapped_column(Float)
     pontos_ganhos: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     colaborador: Mapped["CommutingColaborador"] = relationship(back_populates="registros")
 
@@ -113,7 +113,7 @@ class CommutingMedalha(Base):
     criterio: Mapped[str] = mapped_column(String(100), nullable=False)
     pontos_bonus: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     colaborador_medalhas: Mapped[list["CommutingColaboradorMedalha"]] = relationship(
         back_populates="medalha", cascade="all, delete-orphan")
@@ -133,7 +133,7 @@ class CommutingColaboradorMedalha(Base):
     medalha_id: Mapped[UUID] = mapped_column(
         ForeignKey("commuting_medalhas.id", ondelete="CASCADE"), nullable=False, index=True)
     conquistada_em: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     colaborador: Mapped["CommutingColaborador"] = relationship(back_populates="medalhas")
     medalha: Mapped["CommutingMedalha"] = relationship(back_populates="colaborador_medalhas")

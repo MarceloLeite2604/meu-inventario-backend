@@ -60,6 +60,7 @@ async def create_tables():
     yield
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    await _engine.dispose()
 
 
 @pytest.fixture
