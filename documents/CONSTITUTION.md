@@ -420,6 +420,10 @@ The following JSON is the minimal structure for Visual Studio Code tasks file:
 }
 ```
 
+### API Design
+
+- All REST API routes must be described through OpenAPI documentation.
+
 ### Docker Configuration for Backend
 
 #### Dockerfile
@@ -813,4 +817,4 @@ dist-ssr
 
 ---
 
-*Last updated: February 28, 2026*
+*Last updated: March 2, 2026*

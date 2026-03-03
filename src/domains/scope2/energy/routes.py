@@ -1,0 +1,99 @@
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ....auth import CurrentUser
+from ....database import retrieve_database
+from . import service
+from .schemas import (
+    ConsumoEnergiaCreate,
+    ConsumoEnergiaResponse,
+    EvidenciaConsumoEnergiaCreate,
+    EvidenciaConsumoEnergiaResponse,
+    UnidadeConsumidoraCreate,
+    UnidadeConsumidoraResponse,
+)
+
+router = APIRouter(prefix="/inventories/{inventory_id}/scope2/energy", tags=["scope2"])
+
+DatabaseSession = Annotated[AsyncSession, Depends(retrieve_database)]
+
+
+@router.get("/consumer-units", response_model=list[UnidadeConsumidoraResponse])
+async def list_consumer_units(
+    inventory_id: UUID,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+    organizacao_id: UUID | None = Query(default=None),
+):
+    org_id = organizacao_id or current_user.organization.id
+    return await service.list_consumer_units(org_id, session)
+
+
+@router.post("/consumer-units", response_model=UnidadeConsumidoraResponse, status_code=201)
+async def create_consumer_unit(
+    inventory_id: UUID,
+    data: UnidadeConsumidoraCreate,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+):
+    return await service.create_consumer_unit(data, session)
+
+
+@router.get("", response_model=list[ConsumoEnergiaResponse])
+async def list_consumption_records(
+    inventory_id: UUID,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+    organizacao_id: UUID | None = Query(default=None),
+):
+    return await service.list_consumption_records(inventory_id, organizacao_id, session)
+
+
+@router.post("", response_model=ConsumoEnergiaResponse, status_code=201)
+async def create_consumption_record(
+    inventory_id: UUID,
+    data: ConsumoEnergiaCreate,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+):
+    return await service.create_consumption_record(data, session)
+
+
+@router.get("/{record_id}", response_model=ConsumoEnergiaResponse)
+async def get_consumption_record(
+    inventory_id: UUID,
+    record_id: UUID,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+):
+    return await service.get_consumption_record(record_id, session)
+
+
+@router.delete("/{record_id}", status_code=204)
+async def delete_consumption_record(
+    inventory_id: UUID,
+    record_id: UUID,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+):
+    await service.delete_consumption_record(record_id, session)
+
+
+@router.post("/{record_id}/evidence", response_model=EvidenciaConsumoEnergiaResponse, status_code=201)
+async def add_evidence(
+    inventory_id: UUID,
+    record_id: UUID,
+    data: EvidenciaConsumoEnergiaCreate,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+):
+    return await service.add_evidence(
+        consumo_id=record_id,
+        organizacao_id=current_user.organization.id,
+        data=data,
+        uploaded_by=current_user.id,
+        session=session,
+    )
