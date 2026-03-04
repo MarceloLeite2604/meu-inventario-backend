@@ -68,3 +68,7 @@ class EvidenciaConsumoEnergiaResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class ReprocessResponse(BaseModel):
+    reprocessados: int

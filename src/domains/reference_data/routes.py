@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...authentication import CurrentUser
@@ -8,6 +8,8 @@ from ...database import retrieve_database
 from . import service
 from .schemas import (
     AeroportoCoordenadaResponse,
+    AirportImportResponse,
+    EnergyFactorImportResponse,
     EquivalenciaVeiculoResponse,
     FatorEmissaoAereaResponse,
     FatorEmissaoEnergiaResponse,
@@ -17,6 +19,7 @@ from .schemas import (
     FatorTratamentoEfluenteResponse,
     FatorTransporteOnibusResponse,
     GwpResponse,
+    VehicleFactorImportResponse,
 )
 
 router = APIRouter(prefix="/reference-data", tags=["reference-data"])
@@ -130,3 +133,54 @@ async def list_airports(
 )
 async def list_vehicle_equivalences(current_user: CurrentUser, session: DatabaseSession):
     return await service.list_vehicle_equivalences(session)
+
+
+@router.post(
+    "/energy-factors/import",
+    response_model=EnergyFactorImportResponse,
+    status_code=200,
+    summary="Import energy emission factors",
+    description="Replaces all energy emission factors from an ANEEL-format Excel spreadsheet.",
+)
+async def import_energy_factors(
+    current_user: CurrentUser,
+    session: DatabaseSession,
+    file: UploadFile,
+):
+    content = await file.read()
+    importados = await service.import_energy_factors(content, session)
+    return EnergyFactorImportResponse(importados=importados)
+
+
+@router.post(
+    "/airports/import",
+    response_model=AirportImportResponse,
+    status_code=200,
+    summary="Import airports",
+    description="Replaces all airport coordinates from an Excel spreadsheet (Aeroportos sheet + optional Fatores_emissao_aereas sheet).",
+)
+async def import_airports(
+    current_user: CurrentUser,
+    session: DatabaseSession,
+    file: UploadFile,
+):
+    content = await file.read()
+    counts = await service.import_airports(content, session)
+    return AirportImportResponse(**counts)
+
+
+@router.post(
+    "/vehicle-factors/import",
+    response_model=VehicleFactorImportResponse,
+    status_code=200,
+    summary="Import vehicle emission factors",
+    description="Replaces reference data tables from a multi-sheet Excel spreadsheet. Each sheet matching a known table name is cleared and re-imported.",
+)
+async def import_vehicle_factors(
+    current_user: CurrentUser,
+    session: DatabaseSession,
+    file: UploadFile,
+):
+    content = await file.read()
+    tabelas = await service.import_vehicle_factors(content, session)
+    return VehicleFactorImportResponse(tabelas=tabelas)

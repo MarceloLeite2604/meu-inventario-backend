@@ -112,3 +112,16 @@ class EquivalenciaVeiculoResponse(BaseModel):
     equivalencia: str
 
     model_config = {"from_attributes": True}
+
+
+class EnergyFactorImportResponse(BaseModel):
+    importados: int
+
+
+class AirportImportResponse(BaseModel):
+    aeroportos: int
+    fatores_emissao_aereas: int
+
+
+class VehicleFactorImportResponse(BaseModel):
+    tabelas: dict[str, int]

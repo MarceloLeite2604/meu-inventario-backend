@@ -89,6 +89,29 @@ async def delete_consumption_record(record_id: UUID, session: AsyncSession) -> N
     await session.delete(record)
 
 
+async def reprocess_emissions(session: AsyncSession) -> int:
+    _LOGGER.info("Reprocessing energy emission records with missing emissions")
+    result = await session.execute(
+        select(ConsumoEnergia).where(ConsumoEnergia.emissoes_energia_tco2e.is_(None))
+    )
+    records = list(result.scalars().all())
+    count = 0
+    for record in records:
+        factor_result = await session.execute(
+            select(FatorEmissaoEnergia).where(
+                FatorEmissaoEnergia.ano == record.ano,
+                FatorEmissaoEnergia.mes == record.mes,
+            )
+        )
+        factor = factor_result.scalar_one_or_none()
+        if factor:
+            record.emissoes_energia_tco2e = calculate(record.consumo_mwh, factor.fator_emissao)
+            count += 1
+    await session.flush()
+    _LOGGER.info("Reprocessed %d energy emission records", count)
+    return count
+
+
 async def add_evidence(
     consumo_id: UUID,
     organizacao_id: UUID | str,

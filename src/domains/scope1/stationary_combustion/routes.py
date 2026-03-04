@@ -1,13 +1,20 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....authentication import CurrentUser
 from ....database import retrieve_database
 from . import service
-from .schemas import EmissaoEstacionariaCreate, EmissaoEstacionariaResponse
+from .schemas import (
+    EmissaoEstacionariaCreate,
+    EmissaoEstacionariaResponse,
+    ReprocessResponse,
+    SpedImportRequest,
+    SpedImportResponse,
+    SpedPreviewResponse,
+)
 
 router = APIRouter(
     prefix="/inventories/{inventory_id}/scope1/stationary-combustion", tags=["scope1"])
@@ -68,3 +75,51 @@ async def delete_record(
     inventory_id: UUID, record_id: UUID, current_user: CurrentUser, session: DatabaseSession
 ):
     await service.delete_record(record_id, session)
+
+
+@router.post(
+    "/reprocess",
+    response_model=ReprocessResponse,
+    summary="Reprocess stationary combustion emissions",
+    description="Recalculates emissions for stationary combustion records with missing emission values.",
+)
+async def reprocess_records(
+    inventory_id: UUID,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+):
+    reprocessados = await service.reprocess_records(session)
+    return ReprocessResponse(reprocessados=reprocessados)
+
+
+@router.post(
+    "/sped-preview",
+    response_model=SpedPreviewResponse,
+    summary="Preview SPED file items",
+    description="Parses a SPED file and returns Bloco C items with auto-mapped fuel suggestions.",
+)
+async def sped_preview(
+    inventory_id: UUID,
+    current_user: CurrentUser,
+    file: UploadFile,
+):
+    content = await file.read()
+    items = service.parse_sped_file(content)
+    return SpedPreviewResponse(items=items)
+
+
+@router.post(
+    "/sped-import",
+    response_model=SpedImportResponse,
+    status_code=201,
+    summary="Import SPED items as stationary combustion records",
+    description="Creates stationary combustion emission records from SPED-mapped items.",
+)
+async def sped_import(
+    inventory_id: UUID,
+    data: SpedImportRequest,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+):
+    criados, registros = await service.import_sped_items(data, session)
+    return SpedImportResponse(criados=criados, registros=registros)

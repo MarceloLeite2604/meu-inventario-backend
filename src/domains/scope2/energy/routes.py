@@ -12,6 +12,7 @@ from .schemas import (
     ConsumoEnergiaResponse,
     EvidenciaConsumoEnergiaCreate,
     EvidenciaConsumoEnergiaResponse,
+    ReprocessResponse,
     UnidadeConsumidoraCreate,
     UnidadeConsumidoraResponse,
 )
@@ -112,6 +113,21 @@ async def delete_consumption_record(
     session: DatabaseSession,
 ):
     await service.delete_consumption_record(record_id, session)
+
+
+@router.post(
+    "/reprocess",
+    response_model=ReprocessResponse,
+    summary="Reprocess energy emissions",
+    description="Recalculates emissions for energy consumption records with missing emission values.",
+)
+async def reprocess_emissions(
+    inventory_id: UUID,
+    current_user: CurrentUser,
+    session: DatabaseSession,
+):
+    reprocessados = await service.reprocess_emissions(session)
+    return ReprocessResponse(reprocessados=reprocessados)
 
 
 @router.post(

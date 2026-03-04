@@ -40,3 +40,40 @@ class EmissaoEstacionariaResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class SpedItem(BaseModel):
+    codigo: str
+    descricao: str
+    quantidade: float
+    unidade: str
+    combustivel_fossil_sugerido: str | None = None
+
+
+class SpedPreviewResponse(BaseModel):
+    items: list[SpedItem]
+
+
+class SpedImportItem(BaseModel):
+    codigo: str
+    descricao: str
+    quantidade: float
+    unidade: str
+    combustivel_fossil: str
+
+
+class SpedImportRequest(BaseModel):
+    organizacao_id: UUID | None = None
+    ano: int
+    mes: int
+    descricao: str | None = None
+    items: list[SpedImportItem]
+
+
+class SpedImportResponse(BaseModel):
+    criados: int
+    registros: list[EmissaoEstacionariaResponse]
+
+
+class ReprocessResponse(BaseModel):
+    reprocessados: int

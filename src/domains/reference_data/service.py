@@ -1,9 +1,12 @@
-from sqlalchemy import select
+from sqlalchemy import delete, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...util.logger import retrieve_logger
+from . import excel_parsers
 from .models import (
     AeroportoCoordenada,
+    ComposicaoCombustivel,
+    ConsumoUnidadeMedida,
     EquivalenciaVeiculo,
     FatorEmissaoAerea,
     FatorEmissaoEnergia,
@@ -12,8 +15,26 @@ from .models import (
     FatorTipoCombustivel,
     FatorTratamentoEfluente,
     FatorTransporteOnibus,
+    FatorVariavelGhg,
     Gwp,
+    TransporteMetro,
+    TransporteTrem,
 )
+
+_TABLE_MODEL_MAP = {
+    "composicao_combustiveis": ComposicaoCombustivel,
+    "equivalencia_veiculos": EquivalenciaVeiculo,
+    "fatores_frota_tipo_combustivel": FatorFrotaTipoCombustivel,
+    "gwp": Gwp,
+    "fatores_variaveis_ghg": FatorVariavelGhg,
+    "transporte_metro": TransporteMetro,
+    "transporte_trem": TransporteTrem,
+    "consumo_unidade_medida": ConsumoUnidadeMedida,
+    "fatores_estacionaria": FatorEstacionaria,
+    "fatores_tipo_combustivel": FatorTipoCombustivel,
+    "fatores_emissao_aereas": FatorEmissaoAerea,
+    "fatores_transporte_onibus": FatorTransporteOnibus,
+}
 
 _LOGGER = retrieve_logger(__name__)
 
@@ -100,3 +121,53 @@ async def list_vehicle_equivalences(session: AsyncSession) -> list[EquivalenciaV
     result = await session.execute(
         select(EquivalenciaVeiculo).order_by(EquivalenciaVeiculo.transporte))
     return list(result.scalars().all())
+
+
+async def import_energy_factors(content: bytes, session: AsyncSession) -> int:
+    _LOGGER.info("Importing energy emission factors from Excel (%d bytes)", len(content))
+    records = excel_parsers.parse_energy_factors(content)
+    await session.execute(delete(FatorEmissaoEnergia))
+    for row in records:
+        session.add(FatorEmissaoEnergia(**row))
+    _LOGGER.info("Imported %d energy emission factors", len(records))
+    return len(records)
+
+
+async def import_airports(content: bytes, session: AsyncSession) -> dict[str, int]:
+    _LOGGER.info("Importing airports from Excel (%d bytes)", len(content))
+    parsed = excel_parsers.parse_airports(content)
+    await session.execute(delete(AeroportoCoordenada))
+    for row in parsed["aeroportos"]:
+        session.add(AeroportoCoordenada(**row))
+    if parsed["fatores_emissao_aereas"]:
+        await session.execute(delete(FatorEmissaoAerea))
+        for row in parsed["fatores_emissao_aereas"]:
+            session.add(FatorEmissaoAerea(**row))
+    counts = {
+        "aeroportos": len(parsed["aeroportos"]),
+        "fatores_emissao_aereas": len(parsed["fatores_emissao_aereas"]),
+    }
+    _LOGGER.info("Imported %s", counts)
+    return counts
+
+
+async def import_vehicle_factors(content: bytes, session: AsyncSession) -> dict[str, int]:
+    _LOGGER.info("Importing vehicle factors from Excel (%d bytes)", len(content))
+    parsed = excel_parsers.parse_vehicle_factors(content)
+    counts: dict[str, int] = {}
+    for table_name, rows in parsed.items():
+        model_class = _TABLE_MODEL_MAP.get(table_name)
+        if not model_class:
+            continue
+        mapper = inspect(model_class)
+        valid_cols = {
+            col.key for col in mapper.columns if col.key not in ("id", "created_at")
+        }
+        await session.execute(delete(model_class))
+        for row in rows:
+            filtered = {k: v for k, v in row.items() if k in valid_cols}
+            if filtered:
+                session.add(model_class(**filtered))
+        counts[table_name] = len(rows)
+        _LOGGER.info("Imported %d rows into %s", len(rows), table_name)
+    return counts
