@@ -465,6 +465,7 @@ services:
 
 - For Python projects, `pytest` library must be used to elaborate tests.
 - `pytest-cov` library must be included to generate coverage report.
+- Coverage must be reported at the end of `pytest` execution.
 - Test reports and files must be added to `.gitignore` and `.dockerignore` files.
 - Monkeypatch must be used for patches.
 - Apply test writing best practices when elaborating tests.
@@ -817,4 +818,4 @@ dist-ssr
 
 ---
 
-*Last updated: March 2, 2026*
+*Last updated: March 3, 2026*
