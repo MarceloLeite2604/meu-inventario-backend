@@ -124,7 +124,7 @@ async def generate_pdf(inventory_id: UUID, session: AsyncSession) -> bytes:
 
     pdf.ln(8)
     pdf.set_font("Helvetica", "I", 9)
-    pdf.cell(0, 6, "Gerado automaticamente pelo sistema Meu Inventario - Mercado Net Zero", ln=True)
+    pdf.cell(0, 6, "Gerado automaticamente pelo sistema Pegada - Mercado Net Zero", ln=True)
 
     _LOGGER.info("PDF report generated for inventory %s", inventory_id)
     buf = BytesIO()

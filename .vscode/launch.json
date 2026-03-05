@@ -28,7 +28,7 @@
             "pathMappings": [
                 {
                     "localRoot": "${workspaceFolder}",
-                    "remoteRoot": "/opt/mercado-net-zero/meu-inventario"
+                    "remoteRoot": "/opt/mercado-net-zero/pegada"
                 }
             ],
             "justMyCode": false

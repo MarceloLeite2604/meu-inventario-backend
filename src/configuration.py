@@ -29,7 +29,7 @@ class KeycloakSettings(BaseSettings):
     realm: str
 
     model_config = SettingsConfigDict(
-        env_prefix="MNZ_MI_KEYCLOAK_",
+        env_prefix="MNZ_PB_KEYCLOAK_",
         env_file=[".env", f".env.{_ENVIRONMENT}"],
         extra="ignore"
     )
@@ -44,7 +44,7 @@ class CorsSettings(BaseSettings):
     allowed_headers: Annotated[list[str], NoDecode]
 
     model_config = SettingsConfigDict(
-        env_prefix="MNZ_MI_CORS_",
+        env_prefix="MNZ_PB_CORS_",
         env_file=[".env", f".env.{_ENVIRONMENT}"],
         extra="ignore"
     )
@@ -78,7 +78,7 @@ class SmtpSettings(BaseSettings):
     sender: str
 
     model_config = SettingsConfigDict(
-        env_prefix="MNZ_MI_SMTP_",
+        env_prefix="MNZ_PB_SMTP_",
         env_file=[".env", f".env.{_ENVIRONMENT}"],
         extra="ignore"
     )
@@ -103,7 +103,7 @@ class Settings(BaseSettings):
     smtp: SmtpSettings = Field(default_factory=SmtpSettings)
 
     model_config = SettingsConfigDict(
-        env_prefix="MNZ_MI_",
+        env_prefix="MNZ_PB_",
         env_file=[".env", f".env.{_ENVIRONMENT}"],
         extra="ignore"
     )

@@ -19,8 +19,8 @@ if [ -z "${CONTAINER_USERNAME:-}" ]; then
     exit 1
 fi
 
-if [ -z "${MNZ_MI_WORK_DIRECTORY:-}" ]; then
-    echo "Error: MNZ_MI_WORK_DIRECTORY environment variable is not set."
+if [ -z "${MNZ_PB_WORK_DIRECTORY:-}" ]; then
+    echo "Error: MNZ_PB_WORK_DIRECTORY environment variable is not set."
     exit 1
 fi
 
@@ -63,8 +63,8 @@ else
 fi
 
 echo "Creating working directory and setting permissions..."
-mkdir -p "$MNZ_MI_WORK_DIRECTORY"
-chown -R "$CONTAINER_USERNAME:$CONTAINER_USERNAME" "$MNZ_MI_WORK_DIRECTORY"
+mkdir -p "$MNZ_PB_WORK_DIRECTORY"
+chown -R "$CONTAINER_USERNAME:$CONTAINER_USERNAME" "$MNZ_PB_WORK_DIRECTORY"
 
 echo "Setting umask to 0002 for all users..."
 printf '%s\n' 'umask 0002' > /etc/profile.d/umask.sh && \

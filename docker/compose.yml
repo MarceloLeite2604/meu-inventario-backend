@@ -1,12 +1,12 @@
 name: mnz
 services:
-  meu-inventario:
+  pegada-backend:
     user: "${HOST_UID:-0}:${HOST_GID:-0}"
     build:
       context: ../.
       dockerfile: ./docker/Dockerfile
       args:
-        - MNZ_MI_WORK_DIRECTORY=${MNZ_MI_WORK_DIRECTORY:-undefined}
+        - MNZ_PB_WORK_DIRECTORY=${MNZ_PB_WORK_DIRECTORY:-undefined}
     env_file:
       - path: ../.env
         required: false
@@ -14,8 +14,8 @@ services:
         required: false
     environment:
       - ENVIRONMENT=${ENVIRONMENT}
-    image: mnz-meu-inventario:${IMAGE_TAG}
+    image: mnz-pegada-backend:${IMAGE_TAG}
     ports:
-      - "${MNZ_MI_PORT:-8000}:${MNZ_MI_PORT:-8000}"
+      - "${MNZ_PB_PORT:-8000}:${MNZ_PB_PORT:-8000}"
       - "5680:5680"
     restart: unless-stopped

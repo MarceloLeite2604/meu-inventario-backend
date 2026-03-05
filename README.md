@@ -1,4 +1,4 @@
-# Meu Inventario - Backend
+# Pegada - Backend
 
 Backend service for GHG (Greenhouse Gas) emissions inventory management. Provides REST API endpoints for tracking Scope 1, 2, and 3 emissions, generating compliance reports, and enabling employee commuting data collection.
 
@@ -79,7 +79,7 @@ The Docker image is built using `isbuild` from `infrastructure-scripts`. For bac
 isbuild
 ```
 
-The output image is named `mnz-meu-inventario` and tagged with the current git commit hash (e.g., `mnz-meu-inventario:a3b2c1d`).
+The output image is named `mnz-pegada` and tagged with the current git commit hash (e.g., `mnz-pegada:a3b2c1d`).
 
 Before building, ensure `docker/.env.compose` is filled with the appropriate values.
 

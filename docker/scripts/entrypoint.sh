@@ -1,12 +1,12 @@
 #!/bin/sh
 
-if [ -z "${MNZ_MI_WORK_DIRECTORY:-}" ]; then
-    echo "Error: MNZ_MI_WORK_DIRECTORY environment variable is not set."
+if [ -z "${MNZ_PB_WORK_DIRECTORY:-}" ]; then
+    echo "Error: MNZ_PB_WORK_DIRECTORY environment variable is not set."
     exit 1
 fi
 
-ALEMBIC="$MNZ_MI_WORK_DIRECTORY/.venv/bin/alembic"
-ALEMBIC_INI="$MNZ_MI_WORK_DIRECTORY/database/scripts/alembic.ini"
+ALEMBIC="$MNZ_PB_WORK_DIRECTORY/.venv/bin/alembic"
+ALEMBIC_INI="$MNZ_PB_WORK_DIRECTORY/database/scripts/alembic.ini"
 
 echo "Running database migrations..."
 MIGRATION_LOG=$(mktemp)
@@ -34,4 +34,4 @@ else
 fi
 
 echo "Starting application..."
-"$MNZ_MI_WORK_DIRECTORY/.venv/bin/python" -m src.main "$@"
+"$MNZ_PB_WORK_DIRECTORY/.venv/bin/python" -m src.main "$@"

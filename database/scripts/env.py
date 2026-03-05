@@ -18,13 +18,13 @@ from src.models import Base  # noqa: E402
 target_metadata = Base.metadata
 
 _DATABASE_URL: str = (
-    os.environ.get("MNZ_MI_DATABASE_URL")
+    os.environ.get("MNZ_PB_DATABASE_URL")
     or alembic_configuration.get_main_option("sqlalchemy.url")
     or ""
 )
 
 if not _DATABASE_URL:
-    raise ValueError("DATABASE_URL must be set via MNZ_MI_DATABASE_URL or sqlalchemy.url in alembic.ini")
+    raise ValueError("DATABASE_URL must be set via MNZ_PB_DATABASE_URL or sqlalchemy.url in alembic.ini")
 
 
 def run_migrations_offline() -> None:
