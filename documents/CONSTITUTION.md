@@ -41,6 +41,9 @@ This document defines the standards, conventions, and best practices for all Mer
   - [Docker Configuration for Frontend](#docker-configuration-for-frontend)
   - [Tests](#tests-1)
   - [Version Control](#version-control-1)
+- [Claude Code](#claude-code)
+  - [Settings](#settings)
+  - [Plan Execution Rules](#plan-execution-rules)
 
 ---
 
@@ -818,4 +821,61 @@ dist-ssr
 
 ---
 
-*Last updated: March 3, 2026*
+## Claude Code
+
+The following items are instructions for tasks done through Claude Code only.
+
+### Settings
+
+The Claude Code settings must be defined at `.claude/settings.json` with the following configuration:
+
+```json
+{
+  "plansDirectory": "./.claude/plans"
+}
+```
+
+### Plan Execution Rules
+
+Rules to follow after a plan has been created and its implementation accepted:
+
+1. **Pre-execution Git check**: Before any change, check the changes done at the Git project.
+   - Claude Code must proceed with the plan execution only if the changes detected by Git are at `.claude` and `.vscode` directories (and their subdirectories).
+   - As a special rule, there might be cases where changes at `documents/tech-specs/tech-spec-<index>` directory might be found. Contents at this directory are considered additional resources for the plan elaboration so, as long as these files are referenced in the plan, they are acceptable to not be committed yet. If files under this directory exist but are not mentioned in the plan, the execution must be interrupted and a message reporting it must be presented to the user.
+   - Any other change outside of these directories and files must cancel the task execution.
+   - If the task has been cancelled by this rule, Claude Code must report it to the user.
+
+2. **Technical specification copy**: A copy of the plan must be created at `documents/tech-specs` directory with the name `tech-spec-<index>.md`, where `<index>` is the next technical specification index available.
+   - For example: If the latest technical specification was `tech-spec-008.md`, then the file created must be named `tech-spec-009.md`.
+   - Before creating the copy, Claude Code must check if there is not a technical specification file which already covers the changes at the plan. If so, there is no need to create a new technical specification, but Claude Code must report this to the user and inform which technical specification will be implemented.
+
+3. **Branch check**: Claude Code must verify that the current branch is `main`.
+   - If the current branch is not `main`, then the task execution must be interrupted. Claude Code must report it to the user.
+
+4. **Commit the technical specification**: After creating the technical specification, all changes inside the Git project must be committed with the following commit message template:
+
+   ```
+   [Claude Code] Created technical specification <index>
+   ```
+
+   Replacing `<index>` with the technical specification index used for the new file. Optionally, any other useful information about this commit may be added on subsequent lines.
+
+5. **Create a new branch**: After committing all pending changes, a new branch must be created named `tech-spec-<index>`.
+
+6. **Clear session memory**: Claude Code session memory must be cleared at this point.
+
+7. **Proceed with implementation**: Claude Code can proceed with the plan implementation following the instructions defined in this constitution (`documents/CONSTITUTION.md`).
+
+8. **Commit the implementation**: Once the plan execution is complete, Claude Code must commit its changes with a meaningful commit message prefixed with `[Claude Code]`. For example:
+
+   ```
+   [Claude Code] Implemented users deletion
+
+   - Added `DELETE /user/{id}` REST endpoint
+   - Applied business rule to cascade delete all remaining users information
+   - Added a message at audit table informing about the user deletion
+   ```
+
+---
+
+*Last updated: March 6, 2026*
