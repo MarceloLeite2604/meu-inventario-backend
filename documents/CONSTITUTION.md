@@ -25,11 +25,13 @@ This document defines the standards, conventions, and best practices for all Mer
 - [Docker and Containerization](#docker-and-containerization)
   - [Docker Directory Structure](#docker-directory-structure)
   - [Dockerfile Best Practices](#dockerfile-best-practices)
+  - [Docker Compose Configuration](#docker-compose-configuration)
 - [Backend Projects](#backend-projects)
   - [Technology Stack](#technology-stack)
   - [Environment Setup](#environment-setup)
   - [Type Checking](#type-checking)
   - [VSCode Configuration](#vscode-configuration)
+  - [REST API](#rest-api)
   - [Docker Configuration for Backend](#docker-configuration-for-backend)
   - [Tests](#tests)
   - [Debugging](#debugging)
@@ -272,6 +274,21 @@ The `Dockerfile`:
 - Dependency installations must use caching feature to optimize speed.
 - Use small base images (preferably Alpine-based).
 
+### Docker Compose Configuration
+
+The Docker Compose file must define resource reservations and limits for the container. Default values are:
+
+```yaml
+deploy:
+  resources:
+    limits:
+      cpus: 0.25
+      memory: 64M
+    reservations:
+      cpus: 0.125
+      memory: 32M
+```
+
 ---
 
 ## Backend Projects
@@ -423,9 +440,47 @@ The following JSON is the minimal structure for Visual Studio Code tasks file:
 }
 ```
 
-### API Design
+### REST API
 
-- All REST API routes must be described through OpenAPI documentation.
+- All HTTP endpoints must have OpenAPI documentation.
+- Once an HTTP endpoint has been created, its OpenAPI documentation must be created.
+- Once an HTTP endpoint has been updated, its documentation must be updated as well.
+
+#### HTTP Response Bodies
+
+The HTTP response body for `400 - Bad Request` must follow the structure below:
+
+```json
+{
+    "details": {
+        "code": "<errorCode>",
+        "message": "<defaultMessage>",
+        "properties": {
+            "<property1>": "<value1>",
+            "<property2>": "<value2>"
+        }
+    }
+}
+```
+
+Where:
+- `<errorCode>`: A code to identify the error. For example: `"maximumFilesReached"`, `"maximumStorageSizeReached"`.
+- `<defaultMessage>`: A human-readable message to be displayed when the interface does not know how to handle the error.
+- `properties`: A JSON object containing additional properties that might help the interface elaborate its own message. For example:
+
+  ```json
+  {
+      "maximumFiles": 3
+  }
+  ```
+
+  or
+
+  ```json
+  {
+      "maximumStorageSize": 12582912
+  }
+  ```
 
 ### Docker Configuration for Backend
 
@@ -866,7 +921,7 @@ Rules to follow after a plan has been created and its implementation accepted:
 
 7. **Proceed with implementation**: Claude Code can proceed with the plan implementation following the instructions defined in this constitution (`documents/CONSTITUTION.md`).
 
-8. **Commit the implementation**: Once the plan execution is complete, Claude Code must commit its changes with a meaningful commit message prefixed with `[Claude Code]`. For example:
+8. **Review and commit**: Once the plan execution is complete, **do not commit changes** (this will allow the user to review the changes done). Instead, provide a command to commit the changes with the commit message prefixed with `[Claude Code]`. For example:
 
    ```
    [Claude Code] Implemented users deletion
@@ -878,4 +933,4 @@ Rules to follow after a plan has been created and its implementation accepted:
 
 ---
 
-*Last updated: March 6, 2026*
+*Last updated: March 11, 2026*
