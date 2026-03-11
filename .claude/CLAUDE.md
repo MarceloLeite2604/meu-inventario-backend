@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Session Startup
+
+At the start of every session, read the following files if they exist:
+
+1. `.github/copilot-instructions.md` — shared project conventions and architecture overview kept in sync across editors.
+2. `documents/CONSTITUTION.md` — non-negotiable principles and constraints that govern all development decisions.
+
 ## Commands
 
 **Run the application natively:**
