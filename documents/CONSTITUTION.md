@@ -15,6 +15,7 @@ This document defines the standards, conventions, and best practices for all Mer
   - [Infrastructure Scripts Integration](#infrastructure-scripts-integration)
   - [Project Build](#project-build)
   - [Project Execution](#project-execution)
+  - [Code Verification](#code-verification)
 - [Code Writing and Style](#code-writing-and-style)
   - [General Principles](#general-principles)
   - [Naming Conventions](#naming-conventions)
@@ -180,6 +181,10 @@ Before executing the project, it is necessary to fill `.env` and `.env.<environm
 
 - If the project has a `.env.template`, then it is necessary to create a copy named `.env` and fill all the environment variable values for it.
 - If the project has a `.env.environment.template`, then it is necessary to create a copy named `.env.<environment>`, where `<environment>` is the desired environment for which the project will be executed: `dev-native`, `dev-container` or `production`.
+
+### Code Verification
+
+After implementing any changes, the project code must be verified for type, lint, and sonar (if available) errors.
 
 ---
 
@@ -933,4 +938,4 @@ Rules to follow after a plan has been created and its implementation accepted:
 
 ---
 
-*Last updated: March 11, 2026*
+*Last updated: March 12, 2026*
